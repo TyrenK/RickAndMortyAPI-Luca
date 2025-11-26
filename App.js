@@ -2,8 +2,8 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import CharacterListScreen from './screens/CharacterListScreen';
-import CharacterDetailScreen from './screens/CharacterDetailScreen'; // Definido em outro arquivo
+import CharacterListScreen from './src/screens/CharacterListScreen';
+import CharacterDetailScreen from './src/screens/CharacterDetailScreen'; 
 
 const Stack = createStackNavigator();
 

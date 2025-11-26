@@ -1,6 +1,6 @@
-import axis from "axis";
+import axios from "axios";
 
-const api = axis.create({
+const api = axios.create({
   baseURL: "https://rickandmortyapi.com/api",
 });
 
