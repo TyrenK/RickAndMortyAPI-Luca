@@ -1,11 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Image, ActivityIndicator, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import api from '../services/api'; 
 
-export default function CharacterListScreen ({ navigate }) {
+export default function CharacterListScreen ({ navigation }) {
 
     const [personagens, setPersonagens] = useState([]);
     const [carregando, setCarregando] = useState(true);
+    const [pesquisa, setPesquisa] = useState('');
+
+    const buscarPersonagem = async () => {
+        try {
+            setCarregando(true);
+            const endpoint = pesquisa ? `/character/?name=${pesquisa}` : "/character";
+            const response = await api.get(endpoint);
+            setPersonagens(response.data.results);
+            setCarregando(false);
+        } catch (error) {
+            console.log("Nenhum personagem encontrado.");
+            setPersonagens([]); 
+            setCarregando(false);
+    }
+    };
 
     useEffect(() => {
         const BuscandoPersonagens = async () => {
@@ -14,16 +29,23 @@ export default function CharacterListScreen ({ navigate }) {
                 setPersonagens(response.data.results);
                 setCarregando(false);
             } catch (error) {
-                console.error("Erro ao buscar personagens", error);
+                console.error("Erro ao buscar personagens: ", error);
                 setCarregando(false);
             }   
         };
         BuscandoPersonagens();
     }, []);
 
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+        buscarPersonagem();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+        }, [pesquisa]);
+
     if (carregando) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={styles.carregandoContainer}>
                 <ActivityIndicator size="large" color="#00ff99" />
                 <Text style={{ marginTop: 10 }}>Carregando personagens...</Text>
             </View>
@@ -32,13 +54,25 @@ export default function CharacterListScreen ({ navigate }) {
 
     return (
         <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitulo}>Rick & Morty Characters</Text>
+                <View style={{ width: 20 }}/>
+            </View>
+            <TextInput
+                style={styles.pesquisa}
+                placeholder="Search character..."
+                placeholderTextColor="#888"
+                value={pesquisa}
+                onChangeText={setPesquisa}
+            />
+
             <FlatList
                 data={personagens}
                 keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                     <TouchableOpacity 
-                        style={styles.card}
-                        onPress={() => navigation.navigate("CharacterDetail", { id: item.id })}>
+                        style={[styles.personagem, {borderColor: index % 2 === 0 ? "#00B5CC" : "#00FFAA", borderWidth: 3}]}
+                        onPress={() => navigation.navigate("CharacterDetail", { id: item.id, borderColor: index % 2 === 0 ? "#00B5CC" : "#00FFAA" })}>
                         <Image source={{ uri: item.image }} style={styles.avatar}/>
                         <View>
                             <Text style={styles.nome}>{item.name}</Text>
@@ -48,6 +82,11 @@ export default function CharacterListScreen ({ navigate }) {
                         </View>
                     </TouchableOpacity>
                 )}
+		ListEmptyComponent={
+        		<Text style={{ color: "#fff", marginTop: 20, fontSize: 16, textAlign: "center" }}>
+           		 	Nenhum personagem encontrado.
+        		</Text>
+    		}
             />
         </View>
     );
@@ -59,12 +98,36 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: "#111"
     },
-    loadingContainer: {
+    header: {
+        width: "100%",
+        paddingTop: 50,
+        paddingBottom: 20,
+        backgroundColor: "#0B1E2D",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 15
+    },
+    headerTitulo: {
+        fontSize: 22,
+        fontWeight: "bold",
+        color: "#00FFAA"
+    },
+    carregandoContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        backgroundColor: "#111",
     },
-    card: {
+    pesquisa: {
+        backgroundColor: "#222",
+        color: "#fff",
+        padding: 12,
+        marginVertical: 12,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: "#00FFAA"
+    },
+    personagem: {
         flexDirection: "row",
         backgroundColor: "#222",
         padding: 10,
